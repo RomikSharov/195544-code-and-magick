@@ -1,56 +1,74 @@
 'use strict';
 
-var findMax = function (mass) {
-  var maxItem = mass[0];
-  for (var i = 1; i < mass.length; i++) {
-    if (maxItem < mass[i]) {
-      maxItem = mass[i];
-    }
-  }
-  return maxItem;
+var messageRect = {
+  top: 100,
+  left: 10,
+  width: 420,
+  height: 270,
+  shadow: 10,
+  color: 'white'
 };
 
-var renderStatistics = function (ctx, names, times) {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-  ctx.fillRect(messageRectX + shadowOffset, messageRectY + shadowOffset, messageWidth, messageHeight);
-  ctx.fillStyle = 'white';
-  ctx.fillRect(messageRectX, messageRectY, messageWidth, messageHeight);
-
-  ctx.fillStyle = '#00F';
-  ctx.font = '' + fontHeight + 'pt PT Mono';
-  ctx.fillText('Ура вы победили!', messageTitleX, messageTitleY);
-  ctx.fillText('Список результатов:', messageTitleX, messageTitleY + fontHeight);
-
-  for (var i = 0; i < names.length; i++) {
-    if (names[i] === 'Вы') {
-      ctx.fillStyle = 'rgba(250, 0, 0, 1)'; //  намеренно не задаю изменение цвета для текста ников, хочу чтобы были в цвет гистограммы, а в задании это не регламентируется
-    } else {
-      histogramTransparency = Math.random();
-      histogramTransparency = (histogramTransparency === 0) ? 1 : histogramTransparency;
-      ctx.fillStyle = 'rgba(0, 0, 255, ' + histogramTransparency + ' )';
-    }
-
-    var bestTimes = findMax(times);
-    var ratioHistogramLength = bestTimes / maxHistogramLength;
-    histogramLength = Math.round(times[i] / ratioHistogramLength);
-    ctx.fillRect(messageTitleX + i * (histogramWidth + distanceBetweenHistogram), histogramRectY + maxHistogramLength - histogramLength, histogramWidth, histogramLength);
-    ctx.font = '' + fontHeight + 'pt PT Mono';
-    ctx.fillText(names[i], messageTitleX + i * (histogramWidth + distanceBetweenHistogram), messageHeight);
-    ctx.fillText(Math.round(times[i]), messageTitleX + i * (histogramWidth + distanceBetweenHistogram), messageHeight - messageRectY - maxHistogramLength - fontHeight);
-  }
+var title = {
+  top: messageRect.top + 30,
+  left: messageRect.left + 40,
+  text: '',
+  font: 'pt PT Mono',
+  color: '#00F',
+  fontSize: 16
 };
 
-var messageRectX = 100;
-var messageRectY = 10;
-var shadowOffset = 10;
-var messageWidth = 420;
-var messageHeight = 270;
-var messageTitleX = 130;
-var messageTitleY = 50;
-var fontHeight = 16;
-var histogramLength;
-var maxHistogramLength = 150;
-var histogramWidth = 40;
-var distanceBetweenHistogram = 50;
-var histogramRectY = messageTitleY + fontHeight * 3.125;
-var histogramTransparency = 1;
+var bar = {
+  width: 40,
+  height: 150,
+  indent: 50
+};
+
+var renderRect = function (ctx, rect) {
+  ctx.fillStyle = rect.color;
+  ctx.fillRect(rect.top, rect.left, rect.width, rect.height);
+};
+
+var renderText = function (ctx, titleOptions) {
+  ctx.fillStyle = titleOptions.color;
+  ctx.font = '' + titleOptions.fontSize + titleOptions.font;
+  ctx.fillText(titleOptions.text, titleOptions.top, titleOptions.left);
+};
+
+window.renderStatistics = function (ctx, names, times) {
+  renderRect(ctx, {top: messageRect.top + messageRect.shadow, left: messageRect.left + messageRect.shadow, width: messageRect.width, height: messageRect.height, shadow: messageRect.shadow, color: 'rgba(0, 0, 0, 0.7)'});
+  renderRect(ctx, {top: messageRect.top, left: messageRect.left, width: messageRect.width, height: messageRect.height, shadow: messageRect.shadow, color: 'white'});
+
+  renderText(ctx, {top: title.top, left: title.left, text: 'Ура вы победили!', font: title.font, color: title.color, fontSize: title.fontSize});
+  renderText(ctx, {top: title.top, left: title.left + title.fontSize, text: 'Список результатов:', font: title.font, color: title.color, fontSize: title.fontSize});
+
+  var bestTimes = Math.max.apply(null, times);
+  var ratioHistogramLength = bestTimes / bar.height;
+  var arrNamesLength = names.length;
+  for (var i = 0; i < arrNamesLength; i++) {
+    var histogramLength = Math.round(times[i] / ratioHistogramLength);
+    renderRect(ctx, {
+      top: title.top + i * (bar.width + bar.indent),
+      left: title.left + title.fontSize * 3.125 + bar.height - histogramLength,
+      width: bar.width,
+      height: histogramLength,
+      color: (names[i].toLowerCase() !== 'вы') ? 'rgba(0, 0, 255, ' + (Math.random() + 0.1) + ' )' : 'rgba(250, 0, 0, 1)'
+    });
+    renderText(ctx, {
+      top: title.top + i * (bar.width + bar.indent),
+      left: messageRect.height,
+      text: names[i],
+      font: title.font,
+      color: title.color,
+      fontSize: title.fontSize
+    });
+    renderText(ctx, {
+      top: title.top + i * (bar.width + bar.indent),
+      left: messageRect.height - messageRect.left - bar.height - title.fontSize,
+      text: Math.round(times[i]),
+      font: title.font,
+      color: title.color,
+      fontSize: title.fontSize
+    });
+  }
+};
