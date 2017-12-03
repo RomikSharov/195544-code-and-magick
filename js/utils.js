@@ -2,6 +2,7 @@
 (function () {
   window.utils = {
     //  function getRandomNumber(min, max) {
+    RED: 'red',
     getRandomNumber: function (min, max) {
       var rand = min + Math.floor(Math.random() * (max - min + 1));
       return rand;
